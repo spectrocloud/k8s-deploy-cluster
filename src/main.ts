@@ -126,36 +126,39 @@ export async function deployCluster(cred: Credentials, clusterTemplate: string, 
 
 
 
-async function getKubeconfig() {
+async function provisionCluster() {
   const credentials = {
     host: core.getInput('host'),
     username: core.getInput('username', {required : true}),
     password: core.getInput('password', {required : true}),
   }
-  const projectName =  core.getInput('projectName', {required : true});
-  const clusterName =  core.getInput('clusterName', {required : true});
+  const clusterTemplate =  core.getInput('clusterTemplate', {required : true});
 
-  return getKubeconfigFromSpectroCloud(credentials, projectName, clusterName);
+  const clusterNamePrefix =  core.getInput('clusterNamePrefix', {required : true});
+  // TODO PR#, commit, etc
+  const clusterName =  `clusterNamePrefix-${process.env.GITHUB_RUN_NUMBER}`;
+
+  return deployCluster(credentials, clusterTemplate, clusterName);
 }
 
 export async function run() {
-  // TODO PR#, commit, etc
-  const clusterName = "foo-1"
 
   // clusterNamePrefix
   // env.GITHUB_RUN_NUMBER
 
-  let kubeconfig = await getKubeconfig();
-  const runnerTempDirectory = (process.env['RUNNER_TEMP'] as string); // Using process.env until the core libs are updated
-  const kubeconfigPath = path.join(runnerTempDirectory, `kubeconfig_${Date.now()}`);
-  core.debug(`Writing kubeconfig contents to ${kubeconfigPath}`);
-  fs.writeFileSync(kubeconfigPath, kubeconfig);
-  fs.chmodSync(kubeconfigPath, '600');
-  core.exportVariable('KUBECONFIG', kubeconfigPath);
-  console.log('KUBECONFIG environment variable is set');
+  let clusterId = await provisionCluster();
+
+  // let kubeconfig = await getKubeconfig();
+  // const runnerTempDirectory = (process.env['RUNNER_TEMP'] as string); // Using process.env until the core libs are updated
+  // const kubeconfigPath = path.join(runnerTempDirectory, `kubeconfig_${Date.now()}`);
+  // core.debug(`Writing kubeconfig contents to ${kubeconfigPath}`);
+  // fs.writeFileSync(kubeconfigPath, kubeconfig);
+  // fs.chmodSync(kubeconfigPath, '600');
+  // core.exportVariable('KUBECONFIG', kubeconfigPath);
+  // console.log('KUBECONFIG environment variable is set');
 }
 
-if (existingClusterUid) {
+if (!existingClusterUid) {
   run().catch(core.setFailed);
 } else {
   console.log("Post!");

@@ -51,7 +51,6 @@ This action can be used to deploy a new Kubernetes cluster on public, private, a
     host: {enter Spectro Cloud API Endpoint (optional)}
     username: {enter user's Spectro Cloud Username}
     password: {enter user's Spectro Cloud Password}
-    projectName: {enter Spectro Cloud Project Name}
     deletePostJob: {enter true/false depending on whether to delete the cluster after job}
     clusterNamePrefix: {enter name prefix}
     clusterTemplate: {enter template config (see examples)}
