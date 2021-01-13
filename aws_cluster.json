@@ -1,0 +1,89 @@
+{
+  "metadata": {
+    "annotations": {},
+    "name": "test2",
+    "labels": {}
+  },
+  "spec": {
+    "profileUid": "5f7e6895b0e4543f4ff35695",
+    "machinePoolConfig": [
+      {
+        "cloudConfig": {
+          "instanceType": "t3.large",
+          "azs": [
+            "us-east-1a"
+          ],
+          "rootDeviceSize": 60,
+          "subnets": []
+        },
+        "poolConfig": {
+          "name": "master-pool",
+          "size": 1,
+          "labels": [
+            "master"
+          ],
+          "isControlPlane": true,
+          "updateStrategy": {
+            "type": "RollingUpdateScaleOut"
+          }
+        }
+      },
+      {
+        "cloudConfig": {
+          "instanceType": "t3.large",
+          "azs": [
+            "us-east-1a"
+          ],
+          "rootDeviceSize": 60,
+          "subnets": []
+        },
+        "poolConfig": {
+          "name": "worker-pool",
+          "size": 1,
+          "labels": [
+            "worker"
+          ],
+          "updateStrategy": {
+            "type": "RollingUpdateScaleOut"
+          }
+        }
+      }
+    ],
+    "cloudConfig": {
+      "region": "us-east-1",
+      "sshKeyName": "default",
+      "vpcId": ""
+    },
+    "cloudAccountUid": "5f7e6879b0e4543f4676d373",
+    "packValues": [
+      {
+        "packUid": "5f7e5fc9b0e4543be266685a",
+        "uid": "5f7e5fc9b0e4543be266685a",
+        "tag": "1.0.x",
+        "name": "csi-aws",
+        "values": "manifests:\n  aws_ebs:\n\n    #Storage type should be one of io1, gp2, sc1, st1 types\n    #Check https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-volume-types.html for more details\n    storageType: \"gp2\"\n\n    #Allowed reclaim policies are Delete, Retain\n    reclaimPolicy: \"Delete\"\n\n    #Toggle for Volume expansion\n    allowVolumeExpansion: \"true\"\n\n    #Toggle for Default class\n    isDefaultClass: \"true\"\n\n    #Supported binding modes are Immediate, WaitForFirstConsumer\n    #Setting this to WaitForFirstConsumer for AWS, so that the volumes gets created in the same AZ as that of the pods\n    volumeBindingMode: \"WaitForFirstConsumer\""
+      },
+      {
+        "packUid": "5f7e5fc9b0e4543bbc7cda5e",
+        "uid": "5f7e5fc9b0e4543bbc7cda5e",
+        "tag": "3.10.x",
+        "name": "cni-calico",
+        "values": "manifests:\n  calico:\n    #This should match the kubernetes POD network CIDR\n    calicoNetworkCIDR: \"192.168.0.0/16\"\n\n    #Should be one of CALICO_IPV4POOL_IPIP or CALICO_IPV4POOL_VXLAN\n    encapsulationType: \"CALICO_IPV4POOL_IPIP\"\n\n    #Should be one of Always, CrossSubnet, Never\n    encapsulationMode: \"Always\""
+      },
+      {
+        "packUid": "5fe0aa6a34f42f55dcbc41e6",
+        "uid": "5fe0aa6a34f42f55dcbc41e6",
+        "tag": "1.18.x",
+        "name": "kubernetes",
+        "values": "pack:\n  k8sHardening: True\n  #CIDR Range for Pods in cluster\n  # Note : This must not overlap with any of the host or service network\n  podCIDR: \"192.168.0.0/16\"\n  #CIDR notation IP range from which to assign service cluster IPs\n  # Note : This must not overlap with any IP ranges assigned to nodes for pods.\n  serviceClusterIpRange: \"10.96.0.0/12\"\n\n# KubeAdm customization for kubernetes hardening. Below config will be ignored if k8sHardening property above is disabled\nkubeadmconfig:\n  apiServer:\n    extraArgs:\n      anonymous-auth: \"true\"\n      insecure-port: \"0\"\n      profiling: \"false\"\n      disable-admission-plugins: \"AlwaysAdmit\"\n      default-not-ready-toleration-seconds: \"60\"\n      default-unreachable-toleration-seconds: \"60\"\n      enable-admission-plugins: \"AlwaysPullImages,NamespaceLifecycle,ServiceAccount,NodeRestriction,PodSecurityPolicy\"\n      audit-log-path: /var/log/apiserver/audit.log\n      audit-policy-file: /etc/kubernetes/audit-policy.yaml\n      audit-log-maxage: \"30\"\n      audit-log-maxbackup: \"10\"\n      audit-log-maxsize: \"100\"\n      authorization-mode: RBAC,Node\n      tls-cipher-suites: \"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256\"\n    extraVolumes:\n      - name: audit-log\n        hostPath: /var/log/apiserver\n        mountPath: /var/log/apiserver\n        pathType: DirectoryOrCreate\n      - name: audit-policy\n        hostPath: /etc/kubernetes/audit-policy.yaml\n        mountPath: /etc/kubernetes/audit-policy.yaml\n        readOnly: true\n        pathType: File\n  controllerManager:\n    extraArgs:\n      profiling: \"false\"\n      terminated-pod-gc-threshold: \"25\"\n      pod-eviction-timeout: \"1m0s\"\n      use-service-account-credentials: \"true\"\n      feature-gates: \"RotateKubeletServerCertificate=true\"\n      address: \"0.0.0.0\"\n  scheduler:\n    extraArgs:\n      profiling: \"false\"\n      address: \"0.0.0.0\"\n  kubeletExtraArgs:\n    read-only-port : \"0\"\n    event-qps: \"0\"\n    feature-gates: \"RotateKubeletServerCertificate=true\"\n    protect-kernel-defaults: \"true\"\n    tls-cipher-suites: \"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256\"\n  files:\n    - path: hardening/audit-policy.yaml\n      targetPath: /etc/kubernetes/audit-policy.yaml\n      targetOwner: \"root:root\"\n      targetPermissions: \"0600\"\n    - path: hardening/privileged-psp.yaml\n      targetPath: /etc/kubernetes/hardening/privileged-psp.yaml\n      targetOwner: \"root:root\"\n      targetPermissions: \"0600\"\n    - path: hardening/90-kubelet.conf\n      targetPath: /etc/sysctl.d/90-kubelet.conf\n      targetOwner: \"root:root\"\n      targetPermissions: \"0600\"\n  preKubeadmCommands:\n    # For enabling 'protect-kernel-defaults' flag to kubelet, kernel parameters changes are required\n    - 'echo \"====> Applying kernel parameters for Kubelet\"'\n    - 'sysctl -p /etc/sysctl.d/90-kubelet.conf'\n  postKubeadmCommands:\n    # Apply the privileged PodSecurityPolicy on the first master node ; Otherwise, CNI (and other) pods won't come up\n    - 'export KUBECONFIG=/etc/kubernetes/admin.conf'\n    # Sometimes api server takes a little longer to respond. Retry if applying the pod-security-policy manifest fails\n    - '[ -f \"$KUBECONFIG\" ] && { echo \" ====> Applying PodSecurityPolicy\" ; until $(kubectl apply -f /etc/kubernetes/hardening/privileged-psp.yaml > /dev/null ); do echo \"Failed to apply PodSecurityPolicies, will retry in 5s\" ; sleep 5 ; done ; } || echo \"Skipping PodSecurityPolicy for worker nodes\"'"
+      },
+      {
+        "packUid": "5f7e5fc9b0e4543ce917834d",
+        "uid": "5f7e5fc9b0e4543ce917834d",
+        "tag": "LTS__18.4.x",
+        "name": "ubuntu-aws",
+        "values": "# Spectro Golden images includes most of the hardening standards recommended by CIS benchmarking v1.5\n\n# Uncomment below section to\n# 1. Include custom files to be copied over to the nodes and/or\n# 2. Execute list of commands before or after kubeadm init/join is executed\n#\n#kubeadmconfig:\n#  preKubeadmCommands:\n#  - echo \"Executing pre kube admin config commands\"\n#  - update-ca-certificates\n#  - 'systemctl restart containerd; sleep 3'\n#  - 'while [ ! -S /var/run/containerd/containerd.sock ]; do echo \"Waiting for containerd...\"; sleep 1; done'\n#  postKubeadmCommands:\n#  - echo \"Executing post kube admin config commands\"\n#  files:\n#  - targetPath: /usr/local/share/ca-certificates/mycom.crt\n#    targetOwner: \"root:root\"\n#    targetPermissions: \"0644\"\n#    content: |\n#      -----BEGIN CERTIFICATE-----\n#      MIICyzCCAbOgAwIBAgIBADANBgkqhkiG9w0BAQsFADAVMRMwEQYDVQQDEwprdWJl\n#      cm5ldGVzMB4XDTIwMDkyMjIzNDMyM1oXDTMwMDkyMDIzNDgyM1owFTETMBEGA1UE\n#      AxMKa3ViZXJuZXRlczCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMdA\n#      nZYs1el/6f9PgV/aO9mzy7MvqaZoFnqO7Qi4LZfYzixLYmMUzi+h8/RLPFIoYLiz\n#      qiDn+P8c9I1uxB6UqGrBt7dkXfjrUZPs0JXEOX9U/6GFXL5C+n3AUlAxNCS5jobN\n#      fbLt7DH3WoT6tLcQefTta2K+9S7zJKcIgLmBlPNDijwcQsbenSwDSlSLkGz8v6N2\n#      7SEYNCV542lbYwn42kbcEq2pzzAaCqa5uEPsR9y+uzUiJpv5tDHUdjbFT8tme3vL\n#      9EdCPODkqtMJtCvz0hqd5SxkfeC2L+ypaiHIxbwbWe7GtliROvz9bClIeGY7gFBK\n#      jZqpLdbBVjo0NZBTJFUCAwEAAaMmMCQwDgYDVR0PAQH/BAQDAgKkMBIGA1UdEwEB\n#      /wQIMAYBAf8CAQAwDQYJKoZIhvcNAQELBQADggEBADIKoE0P+aVJGV9LWGLiOhki\n#      HFv/vPPAQ2MPk02rLjWzCaNrXD7aPPgT/1uDMYMHD36u8rYyf4qPtB8S5REWBM/Y\n#      g8uhnpa/tGsaqO8LOFj6zsInKrsXSbE6YMY6+A8qvv5lPWpJfrcCVEo2zOj7WGoJ\n#      ixi4B3fFNI+wih8/+p4xW+n3fvgqVYHJ3zo8aRLXbXwztp00lXurXUyR8EZxyR+6\n#      b+IDLmHPEGsY9KOZ9VLLPcPhx5FR9njFyXvDKmjUMJJgUpRkmsuU1mCFC+OHhj56\n#      IkLaSJf6z/p2a3YjTxvHNCqFMLbJ2FvJwYCRzsoT2wm2oulnUAMWPI10vdVM+Nc=\n#      -----END CERTIFICATE-----"
+      }
+    ]
+  }
+}

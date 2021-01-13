@@ -1,0 +1,24 @@
+cloudType: aws
+projectName: Default
+clusterProfileName: ProdAWS
+cloudAccountName: aws-1
+labels:
+  cicd: spectro__tag
+cloudConfig:
+  region: us-west-2
+  sshKeyName: default
+machinePools:
+- controlPlane: true
+  controlPlaneAsWorker: true
+  name: master-pool
+  count: 1
+  config:
+    instanceType: t3.large
+    rootDeviceSize: 62
+    azs: ["us-west-2a"]
+# - name: worker-pool1
+#   count: 1
+#   config:
+#     instanceType: t3.large
+#     rootDeviceSize: 65
+#     azs: ["us-west-2a"]

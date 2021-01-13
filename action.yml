@@ -1,0 +1,35 @@
+name: 'Spectro Cloud Deploy Kubernetes'
+description: 'Deploy a new Kubernetes cluster using Spectro Cloud Kubernetes (K8s) Platform as a Service clusters'
+author: 'Spectro Cloud'
+outputs:
+  clusterId:
+    description: The created Spectro Cloud cluster's UID
+inputs:
+  host:
+    required: false
+    description: Spectro Cloud API Endpoint
+    default: api.spectrocloud.com
+  username:
+    required: true
+    description: Spectro Cloud API Username
+  password:
+    required: true
+    description: Spectro Cloud API Username
+
+  clusterTemplate:
+    required: true
+    description: Cluster template specification, see examples for details.
+  clusterNamePrefix:
+    required: false
+    description: Prefix to add to generated cluster names
+    default: spectro-cicd
+  deletePostJob:
+    required: false
+    description: Delete cluster after the job completes
+    default: false
+branding:
+  color: 'purple'
+  icon: 'anchor'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
