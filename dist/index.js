@@ -303,7 +303,7 @@ function provisionCluster() {
         const clusterTemplate = core.getInput('clusterTemplate', { required: true });
         const clusterNamePrefix = core.getInput('clusterNamePrefix', { required: true });
         // TODO PR#, commit, etc
-        const clusterName = `clusterNamePrefix-${process.env.GITHUB_RUN_NUMBER}`;
+        const clusterName = `cicd-${process.env.GITHUB_RUN_NUMBER}`;
         return deployCluster(credentials, clusterTemplate, clusterName);
     });
 }
