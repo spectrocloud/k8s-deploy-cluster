@@ -206,9 +206,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = exports.deployCluster = exports.getKubeconfigFromSpectroCloud = void 0;
-const fs_1 = __importDefault(__webpack_require__(5747));
 const js_yaml_1 = __importDefault(__webpack_require__(1917));
-const path_1 = __importDefault(__webpack_require__(5622));
 const core = __importStar(__webpack_require__(2186));
 const client_1 = __importDefault(__webpack_require__(1565));
 const existingClusterUid = process.env['STATE_clusterUid'];
@@ -295,36 +293,37 @@ function deployCluster(cred, clusterTemplate, clusterName) {
     });
 }
 exports.deployCluster = deployCluster;
-function getKubeconfig() {
+function provisionCluster() {
     return __awaiter(this, void 0, void 0, function* () {
         const credentials = {
             host: core.getInput('host'),
             username: core.getInput('username', { required: true }),
             password: core.getInput('password', { required: true }),
         };
-        const projectName = core.getInput('projectName', { required: true });
-        const clusterName = core.getInput('clusterName', { required: true });
-        return getKubeconfigFromSpectroCloud(credentials, projectName, clusterName);
+        const clusterTemplate = core.getInput('clusterTemplate', { required: true });
+        const clusterNamePrefix = core.getInput('clusterNamePrefix', { required: true });
+        // TODO PR#, commit, etc
+        const clusterName = `clusterNamePrefix-${process.env.GITHUB_RUN_NUMBER}`;
+        return deployCluster(credentials, clusterTemplate, clusterName);
     });
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        // TODO PR#, commit, etc
-        const clusterName = "foo-1";
         // clusterNamePrefix
         // env.GITHUB_RUN_NUMBER
-        let kubeconfig = yield getKubeconfig();
-        const runnerTempDirectory = process.env['RUNNER_TEMP']; // Using process.env until the core libs are updated
-        const kubeconfigPath = path_1.default.join(runnerTempDirectory, `kubeconfig_${Date.now()}`);
-        core.debug(`Writing kubeconfig contents to ${kubeconfigPath}`);
-        fs_1.default.writeFileSync(kubeconfigPath, kubeconfig);
-        fs_1.default.chmodSync(kubeconfigPath, '600');
-        core.exportVariable('KUBECONFIG', kubeconfigPath);
-        console.log('KUBECONFIG environment variable is set');
+        let clusterId = yield provisionCluster();
+        // let kubeconfig = await getKubeconfig();
+        // const runnerTempDirectory = (process.env['RUNNER_TEMP'] as string); // Using process.env until the core libs are updated
+        // const kubeconfigPath = path.join(runnerTempDirectory, `kubeconfig_${Date.now()}`);
+        // core.debug(`Writing kubeconfig contents to ${kubeconfigPath}`);
+        // fs.writeFileSync(kubeconfigPath, kubeconfig);
+        // fs.chmodSync(kubeconfigPath, '600');
+        // core.exportVariable('KUBECONFIG', kubeconfigPath);
+        // console.log('KUBECONFIG environment variable is set');
     });
 }
 exports.run = run;
-if (existingClusterUid) {
+if (!existingClusterUid) {
     run().catch(core.setFailed);
 }
 else {
