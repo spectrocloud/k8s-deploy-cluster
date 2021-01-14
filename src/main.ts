@@ -137,6 +137,8 @@ async function provisionCluster() {
   // TODO PR#, commit, etc
   const clusterName =  `${clusterNamePrefix}-${process.env.GITHUB_RUN_NUMBER}`;
 
+  console.log(`Cluster Name ${clusterName}`)
+
   return deployCluster(credentials, clusterTemplate, clusterName);
 }
 
