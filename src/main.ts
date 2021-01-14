@@ -40,9 +40,7 @@ async function waitForState<T>(
     } else if (!pendingStates.includes(state)) {
       throw new Error(`Invalid state ${state}`);
     }
-    if (i % 5 === 0) {
-      console.log(`State is ${state}`);
-    }
+    console.log(`State is ${state} (${i})`);
     await DelayPromise(delayMs);
   }
   throw new Error('Timeout');
@@ -110,6 +108,7 @@ export async function deployCluster(cred: Credentials, clusterTemplate: string, 
   // Debug logging:
   console.log(JSON.stringify(data, null, 2));
 
+  if (true) return;
   const clusterUid = await c.createCluster(projectUid, cloudType, data);
   core.saveState("clusterUid", clusterUid);
 
@@ -133,10 +132,10 @@ async function provisionCluster() {
     password: core.getInput('password', {required : true}),
   }
   const clusterTemplate =  core.getInput('clusterTemplate', {required : true});
+  const clusterNamePrefix = core.getInput('clusterNamePrefix', {required : true});
 
-  const clusterNamePrefix =  core.getInput('clusterNamePrefix', {required : true});
   // TODO PR#, commit, etc
-  const clusterName =  `cicd-${process.env.GITHUB_RUN_NUMBER}`;
+  const clusterName =  `${clusterNamePrefix}-${process.env.GITHUB_RUN_NUMBER}`;
 
   return deployCluster(credentials, clusterTemplate, clusterName);
 }

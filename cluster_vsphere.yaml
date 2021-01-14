@@ -13,7 +13,7 @@ cloudConfig:
   #   staticIp: false
   placement:
     datacenter: Datacenter
-    folder: Demo/spc-test2332
+    folder: Demo/
     network:
       networkName: ""
       staticIp: false
